@@ -13,15 +13,27 @@ public class PaintGun : MonoBehaviour
    [HideInInspector] public int currentAmmo;
    private PlayerInput _playerInput;
    [SerializeField] private Transform projectileSpawn;
+   [SerializeField] private GameObject mag;
+   [SerializeField] private GameObject staticMag;
+   [SerializeField] private GameObject throwAwayMag;
    private bool _canShoot;
-   
+   private const string ShootAnim = "GunShoot";
+   private const string ReloadAnim = "Reload";
+   private const string UnloadAnim = "Unload";
+   private Animator _animator;
+   private static readonly int GunShoot = Animator.StringToHash(ShootAnim);
+   private static readonly int Reload1 = Animator.StringToHash(ReloadAnim);
+   private static readonly int Unload = Animator.StringToHash(UnloadAnim);
 
    private void Awake()
    {
+      mag.SetActive(false);
+      TryGetComponent(out _animator);
       _playerInput = new PlayerInput();
       currentAmmo = ammo;
       _canShoot = true;
       _playerInput.Player.Fire.performed += tgb => Shoot();
+      _playerInput.Player.Fire.canceled += tgb => StopShoot();
       _playerInput.Player.Reload.performed += tgb => Reload();
       UpdateUI();
    }
@@ -48,6 +60,11 @@ public class PaintGun : MonoBehaviour
       ShootProjectile();
    }
 
+   private void StopShoot()
+   {
+      _animator.SetBool(GunShoot, false);
+
+   }
 
    private void ShootProjectile()
    {
@@ -59,6 +76,7 @@ public class PaintGun : MonoBehaviour
       rb.AddForce(velocity);
       projectileComp.Damage = damage;
       currentAmmo--;
+      _animator.SetBool(GunShoot, true);
       UpdateUI();
    }
 
@@ -68,9 +86,36 @@ public class PaintGun : MonoBehaviour
       StartCoroutine(ReloadTimeout());
    }
 
+   public void ShowMag()
+   {
+      mag.SetActive(true);
+   }
+
+   public void HideMag()
+   {
+      mag.SetActive(false);
+      staticMag.SetActive(true);
+   }
+
+   public void UnloadMag()
+   {
+      staticMag.SetActive(false);
+      var go = Instantiate(throwAwayMag);
+      go.transform.position = staticMag.transform.position;
+      Destroy(go, 2.5f);
+      
+   }
+
    private IEnumerator ReloadTimeout()
    {
-      yield return new WaitForSeconds(1);
+      _animator.SetBool(Unload, true);
+
+      yield return new WaitForSeconds(3.5f);
+      _animator.SetBool(Unload, false);
+      _animator.SetBool(Reload1, true);
+      yield return new WaitForSeconds(6);
+      _animator.SetBool(Reload1, false);
+
       _canShoot = true;
       currentAmmo = ammo;
       UpdateUI();
