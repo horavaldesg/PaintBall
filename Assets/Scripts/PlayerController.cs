@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
     private UnityEngine.InputSystem.PlayerInput _currentInput;
     private Vector2 _move;
     private CharacterController _cc;
- 
+   
     [Range(2, 20)]
     [SerializeField] private float playerSpeed;
  
@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour
     
  
     [SerializeField] private Transform parentTransform;
+    [SerializeField] private Transform gunTransform;
  
  
     [SerializeField] private float slideDelay;
@@ -45,7 +46,8 @@ public class PlayerController : MonoBehaviour
     private const float CrouchDefault = 1;
     
      private void Awake()
-   {
+     {
+        Cursor.lockState = CursorLockMode.Locked;
       _playerInput = new PlayerInput();
       TryGetComponent(out _cc);
       TryGetComponent(out _currentInput);
@@ -119,6 +121,7 @@ public class PlayerController : MonoBehaviour
       _camRotation += mouseY;
       _camRotation = Mathf.Clamp(_camRotation, -80f, 90f);
       camTransform.localRotation = Quaternion.Euler(new Vector3(_camRotation, transform.rotation.y, transform.rotation.z));
+      gunTransform.localRotation = Quaternion.Euler(new Vector3(_camRotation, transform.rotation.y, transform.rotation.z));
    }
 
    private Vector2 CheckSensInput()
